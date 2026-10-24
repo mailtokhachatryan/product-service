@@ -34,6 +34,8 @@ public class ResourceServerConfiguration {
 		http
 				.authorizeHttpRequests(authorize -> authorize
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+						.requestMatchers("/actuator/health", "/actuator/info").permitAll()
+						.requestMatchers("/actuator/**").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("USER", "ADMIN")
 						.requestMatchers("/api/products/**").hasRole("ADMIN")
 						.requestMatchers("/login").permitAll()

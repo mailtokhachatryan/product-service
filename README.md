@@ -42,6 +42,10 @@ The `stg` and `prod` profiles use the corresponding `STG_DB_*` and `PROD_DB_*` v
 
 Flyway runs migrations from `src/main/resources/db/migration` during application startup. The initial `V1__create_products_table.sql` migration creates the `products` table. Add future schema changes as new versioned migrations, such as `V2__add_product_category.sql`; do not edit a migration that has already been applied.
 
+## Monitoring
+
+Spring Boot Actuator exposes health and metrics endpoints under `/actuator`. The custom `productCatalog` health indicator checks the product repository and reports the current product count. Product create and delete operations publish custom Micrometer metrics, available through the secured `/actuator/metrics` endpoint and the Prometheus-compatible `/actuator/prometheus` endpoint. Health and info are public; operational metrics require an administrator JWT.
+
 ## OAuth2 and JWT security
 
 Set local credentials before starting the application. Keep these values outside version control:
