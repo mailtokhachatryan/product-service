@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** Persisted product with an ID managed by the database. */
 @Entity
 @Table(name = "products")
 @Getter
@@ -39,6 +40,14 @@ public class Product {
 	@Setter
 	private int stockQuantity;
 
+	/**
+	 * Creates a product before it receives a database ID.
+	 *
+	 * @param name product name
+	 * @param description optional description
+	 * @param price product price
+	 * @param stockQuantity units in stock
+	 */
 	public Product(String name, String description, BigDecimal price, int stockQuantity) {
 		this.name = name;
 		this.description = description;
