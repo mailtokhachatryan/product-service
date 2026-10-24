@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: ${STG_DB_URL:jdbc:postgresql://stg-db:5432/product_service}
+    username: ${STG_DB_USERNAME:product_service}
+    password: ${STG_DB_PASSWORD}

@@ -7,16 +7,36 @@ A Spring Boot REST service for a product catalog. It uses Spring MVC, Spring Dat
 - Java 21
 - PostgreSQL with a database named `product_service` and a login that can create tables
 
-The application defaults to `jdbc:postgresql://localhost:5432/product_service` and username `product_service`. Supply the password and override the connection settings when needed:
+The application uses the `local` profile by default. Its database defaults to `jdbc:postgresql://localhost:5432/product_service` with username `product_service`:
 
 ```shell
-export DB_URL=jdbc:postgresql://localhost:5432/product_service
-export DB_USERNAME=product_service
 export DB_PASSWORD=your-local-password
 ./gradlew bootRun
 ```
 
 For this CRUD stage, Hibernate creates or updates the local schema on startup. A later migration task will replace this with versioned schema changes.
+
+## Runtime profiles
+
+Select the environment with `SPRING_PROFILES_ACTIVE`. The application includes `local`, `dev`, `stg`, and `prod` profiles, each with its own PostgreSQL connection settings in `application-{profile}.yml`.
+
+```shell
+# Local is the default; the profile can also be selected explicitly.
+export SPRING_PROFILES_ACTIVE=local
+export DB_URL=jdbc:postgresql://localhost:5432/product_service
+export DB_USERNAME=product_service
+export DB_PASSWORD=your-local-password
+
+# Non-local profiles use environment-specific connection variables.
+export SPRING_PROFILES_ACTIVE=dev
+export DEV_DB_URL=jdbc:postgresql://dev-db:5432/product_service
+export DEV_DB_USERNAME=product_service
+export DEV_DB_PASSWORD=your-dev-password
+
+./gradlew bootRun
+```
+
+The `stg` and `prod` profiles use the corresponding `STG_DB_*` and `PROD_DB_*` variables. Their passwords have no committed defaults, so those values must be supplied by the runtime environment.
 
 ## OAuth2 and JWT security
 
