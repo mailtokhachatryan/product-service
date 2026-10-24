@@ -114,4 +114,4 @@ Use the ID from the create response's `Location` header in the read, update, and
 ./gradlew test
 ```
 
-The tests use an in-memory database and require no running PostgreSQL server. They exercise the HTTP endpoints, authorization rules, JWT validation, OAuth2 metadata, and main error responses.
+The tests use an in-memory H2 database and require no running PostgreSQL server. Repository tests validate persistence, service tests cover business logic with Mockito, and Spring Boot integration tests exercise the HTTP endpoints, authorization rules, JWT validation, OAuth2 metadata, Flyway migrations, Actuator endpoints, and main error responses.
