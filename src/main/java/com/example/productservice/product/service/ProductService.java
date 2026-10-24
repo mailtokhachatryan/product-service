@@ -2,6 +2,7 @@ package com.example.productservice.product.service;
 
 import java.util.List;
 
+import com.example.productservice.monitoring.ProductMetrics;
 import com.example.productservice.product.Product;
 import com.example.productservice.product.dto.ProductRequest;
 import com.example.productservice.product.dto.ProductResponse;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
 	private final ProductRepository productRepository;
+	private final ProductMetrics productMetrics;
 
 	/**
 	 * Persists a new product.
@@ -28,7 +30,9 @@ public class ProductService {
 	@Transactional
 	public ProductResponse create(ProductRequest request) {
 		Product product = new Product(request.name(), request.description(), request.price(), request.stockQuantity());
-		return toResponse(productRepository.save(product));
+		ProductResponse response = toResponse(productRepository.save(product));
+		productMetrics.recordCreated();
+		return response;
 	}
 
 	/**
@@ -75,6 +79,7 @@ public class ProductService {
 	@Transactional
 	public void delete(long id) {
 		productRepository.delete(findProduct(id));
+		productMetrics.recordDeleted();
 	}
 
 	private Product findProduct(long id) {
