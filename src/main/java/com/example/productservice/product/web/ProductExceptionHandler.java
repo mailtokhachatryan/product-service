@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice(assignableTypes = ProductController.class)
 public class ProductExceptionHandler {
 
+	private static final String VALIDATION_FAILED_MESSAGE = "Validation failed";
+	private static final String MALFORMED_REQUEST_BODY_MESSAGE = "Malformed request body";
+
 	/**
 	 * Returns a 404 response for an unknown product ID.
 	 *
@@ -24,7 +27,7 @@ public class ProductExceptionHandler {
 	@ExceptionHandler(ProductNotFoundException.class)
 	public ResponseEntity<ApiError> notFound(ProductNotFoundException exception) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-				.body(new ApiError(404, exception.getMessage(), Map.of()));
+				.body(new ApiError(HttpStatus.NOT_FOUND.value(), exception.getMessage(), Map.of()));
 	}
 
 	/**
@@ -38,7 +41,8 @@ public class ProductExceptionHandler {
 		Map<String, String> errors = new TreeMap<>();
 		exception.getBindingResult().getFieldErrors().forEach(error ->
 				errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
-		return ResponseEntity.badRequest().body(new ApiError(400, "Validation failed", errors));
+		return ResponseEntity.badRequest().body(new ApiError(
+				HttpStatus.BAD_REQUEST.value(), VALIDATION_FAILED_MESSAGE, errors));
 	}
 
 	/**
@@ -48,6 +52,7 @@ public class ProductExceptionHandler {
 	 */
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<ApiError> invalidJson() {
-		return ResponseEntity.badRequest().body(new ApiError(400, "Malformed request body", Map.of()));
+		return ResponseEntity.badRequest().body(new ApiError(
+				HttpStatus.BAD_REQUEST.value(), MALFORMED_REQUEST_BODY_MESSAGE, Map.of()));
 	}
 }

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Exposes CRUD operations for products over HTTP. */
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping(ProductApiPaths.PRODUCTS_PATH)
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -35,7 +35,7 @@ public class ProductController {
 	@PostMapping
 	public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
 		ProductResponse product = productService.create(request);
-		return ResponseEntity.created(URI.create("/api/products/" + product.id())).body(product);
+		return ResponseEntity.created(URI.create(ProductApiPaths.PRODUCT_RESOURCE_PATH_PREFIX + product.id())).body(product);
 	}
 
 	/**
@@ -44,8 +44,8 @@ public class ProductController {
 	 * @return the ordered product list
 	 */
 	@GetMapping
-	public List<ProductResponse> findAll() {
-		return productService.findAll();
+	public ResponseEntity<List<ProductResponse>> findAll() {
+		return ResponseEntity.ok(productService.findAll());
 	}
 
 	/**
@@ -54,9 +54,9 @@ public class ProductController {
 	 * @param id product ID
 	 * @return the matching product
 	 */
-	@GetMapping("/{id}")
-	public ProductResponse findById(@PathVariable long id) {
-		return productService.findById(id);
+	@GetMapping(ProductApiPaths.PRODUCT_ID_PATH)
+	public ResponseEntity<ProductResponse> findById(@PathVariable long id) {
+		return ResponseEntity.ok(productService.findById(id));
 	}
 
 	/**
@@ -66,9 +66,9 @@ public class ProductController {
 	 * @param request validated replacement details
 	 * @return the updated product
 	 */
-	@PutMapping("/{id}")
-	public ProductResponse update(@PathVariable long id, @Valid @RequestBody ProductRequest request) {
-		return productService.update(id, request);
+	@PutMapping(ProductApiPaths.PRODUCT_ID_PATH)
+	public ResponseEntity<ProductResponse> update(@PathVariable long id, @Valid @RequestBody ProductRequest request) {
+		return ResponseEntity.ok(productService.update(id, request));
 	}
 
 	/**
@@ -77,7 +77,7 @@ public class ProductController {
 	 * @param id product ID
 	 * @return an empty 204 response
 	 */
-	@DeleteMapping("/{id}")
+	@DeleteMapping(ProductApiPaths.PRODUCT_ID_PATH)
 	public ResponseEntity<Void> delete(@PathVariable long id) {
 		productService.delete(id);
 		return ResponseEntity.noContent().build();
