@@ -57,6 +57,24 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 @EnableConfigurationProperties(SecurityProperties.class)
 public class AuthorizationServerConfiguration {
 
+	private static final String LOGIN_PATH = "/login";
+	private static final String PRODUCT_CLIENT_ID = "product-client";
+	private static final String LOOPBACK_REDIRECT_URI = "http://127.0.0.1:8081/callback";
+	private static final String POSTMAN_REDIRECT_URI = "https://oauth.pstmn.io/v1/callback";
+	private static final String PRODUCT_READ_SCOPE = "product.read";
+	private static final String PRODUCT_WRITE_SCOPE = "product.write";
+	private static final String USERNAME = "user";
+	private static final String ADMIN_USERNAME = "admin";
+	private static final String USER_ROLE = "USER";
+	private static final String ADMIN_ROLE = "ADMIN";
+	private static final String ROLES_CLAIM = "roles";
+	private static final String ROLE_AUTHORITY_PREFIX = "ROLE_";
+	private static final String RSA_ALGORITHM = "RSA";
+	private static final int RSA_KEY_SIZE_BITS = 2048;
+	private static final Duration ACCESS_TOKEN_TTL = Duration.ofMinutes(15);
+	private static final Duration REFRESH_TOKEN_TTL = Duration.ofHours(8);
+	private static final String JWT_KEY_GENERATION_ERROR = "Failed to generate the JWT signing key";
+
 	/** Creates the authorization-server configuration. */
 	public AuthorizationServerConfiguration() {
 	}
@@ -78,7 +96,7 @@ public class AuthorizationServerConfiguration {
 				})
 				.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
 				.exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
-						new LoginUrlAuthenticationEntryPoint("/login"),
+						new LoginUrlAuthenticationEntryPoint(LOGIN_PATH),
 						new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
 				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
 
@@ -94,13 +112,13 @@ public class AuthorizationServerConfiguration {
 	 */
 	@Bean
 	public UserDetailsService userDetailsService(SecurityProperties properties, PasswordEncoder passwordEncoder) {
-		UserDetails user = User.withUsername("user")
+		UserDetails user = User.withUsername(USERNAME)
 				.password(passwordEncoder.encode(properties.userPassword()))
-				.roles("USER")
+				.roles(USER_ROLE)
 				.build();
-		UserDetails admin = User.withUsername("admin")
+		UserDetails admin = User.withUsername(ADMIN_USERNAME)
 				.password(passwordEncoder.encode(properties.adminPassword()))
-				.roles("USER", "ADMIN")
+				.roles(USER_ROLE, ADMIN_ROLE)
 				.build();
 		return new InMemoryUserDetailsManager(user, admin);
 	}
@@ -126,24 +144,24 @@ public class AuthorizationServerConfiguration {
 	public RegisteredClientRepository registeredClientRepository(
 			SecurityProperties properties, PasswordEncoder passwordEncoder) {
 		RegisteredClient productClient = RegisteredClient.withId(UUID.randomUUID().toString())
-				.clientId("product-client")
+				.clientId(PRODUCT_CLIENT_ID)
 				.clientSecret(passwordEncoder.encode(properties.clientSecret()))
 				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.redirectUri("http://127.0.0.1:8081/callback")
-				.redirectUri("https://oauth.pstmn.io/v1/callback")
+				.redirectUri(LOOPBACK_REDIRECT_URI)
+				.redirectUri(POSTMAN_REDIRECT_URI)
 				.scope(OidcScopes.OPENID)
 				.scope(OidcScopes.PROFILE)
-				.scope("product.read")
-				.scope("product.write")
+				.scope(PRODUCT_READ_SCOPE)
+				.scope(PRODUCT_WRITE_SCOPE)
 				.clientSettings(ClientSettings.builder()
 						.requireAuthorizationConsent(true)
 						.requireProofKey(true)
 						.build())
 				.tokenSettings(TokenSettings.builder()
-						.accessTokenTimeToLive(Duration.ofMinutes(15))
-						.refreshTokenTimeToLive(Duration.ofHours(8))
+						.accessTokenTimeToLive(ACCESS_TOKEN_TTL)
+						.refreshTokenTimeToLive(REFRESH_TOKEN_TTL)
 						.reuseRefreshTokens(false)
 						.build())
 				.build();
@@ -168,10 +186,10 @@ public class AuthorizationServerConfiguration {
 						.filter(Objects::nonNull)
 						.map(GrantedAuthority::getAuthority)
 						.filter(Objects::nonNull)
-						.filter(authority -> authority.startsWith("ROLE_"))
-						.map(authority -> authority.substring("ROLE_".length()))
+						.filter(authority -> authority.startsWith(ROLE_AUTHORITY_PREFIX))
+						.map(authority -> authority.substring(ROLE_AUTHORITY_PREFIX.length()))
 						.collect(Collectors.toUnmodifiableSet());
-				context.getClaims().claim("roles", roles);
+				context.getClaims().claim(ROLES_CLAIM, roles);
 			}
 		};
 	}
@@ -229,12 +247,12 @@ public class AuthorizationServerConfiguration {
 
 	private KeyPair generateRsaKey() {
 		try {
-			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-			keyPairGenerator.initialize(2048);
+			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
+			keyPairGenerator.initialize(RSA_KEY_SIZE_BITS);
 			return keyPairGenerator.generateKeyPair();
 		}
 		catch (Exception exception) {
-			throw new IllegalStateException("Failed to generate the JWT signing key", exception);
+			throw new IllegalStateException(JWT_KEY_GENERATION_ERROR, exception);
 		}
 	}
 }
