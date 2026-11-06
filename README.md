@@ -7,16 +7,44 @@ A Spring Boot REST service for a product catalog. It uses Spring MVC, Spring Dat
 - Java 21
 - PostgreSQL with a database named `product_service` and a login that can create tables
 
-The application defaults to `jdbc:postgresql://localhost:5432/product_service` and username `product_service`. Supply the password and override the connection settings when needed:
+The application uses the `local` profile by default. Its database defaults to `jdbc:postgresql://localhost:5432/product_service` with username `product_service`:
 
 ```shell
-export DB_URL=jdbc:postgresql://localhost:5432/product_service
-export DB_USERNAME=product_service
 export DB_PASSWORD=your-local-password
 ./gradlew bootRun
 ```
 
-For this CRUD stage, Hibernate creates or updates the local schema on startup. A later migration task will replace this with versioned schema changes.
+Flyway applies versioned database migrations automatically at startup, while Hibernate validates the resulting schema.
+
+## Runtime profiles
+
+Select the environment with `SPRING_PROFILES_ACTIVE`. The application includes `local`, `dev`, `stg`, and `prod` profiles, each with its own PostgreSQL connection settings in `application-{profile}.yml`.
+
+```shell
+# Local is the default; the profile can also be selected explicitly.
+export SPRING_PROFILES_ACTIVE=local
+export DB_URL=jdbc:postgresql://localhost:5432/product_service
+export DB_USERNAME=product_service
+export DB_PASSWORD=your-local-password
+
+# Non-local profiles use environment-specific connection variables.
+export SPRING_PROFILES_ACTIVE=dev
+export DEV_DB_URL=jdbc:postgresql://dev-db:5432/product_service
+export DEV_DB_USERNAME=product_service
+export DEV_DB_PASSWORD=your-dev-password
+
+./gradlew bootRun
+```
+
+The `stg` and `prod` profiles use the corresponding `STG_DB_*` and `PROD_DB_*` variables. Their passwords have no committed defaults, so those values must be supplied by the runtime environment.
+
+## Database migrations
+
+Flyway runs migrations from `src/main/resources/db/migration` during application startup. The initial `V1__create_products_table.sql` migration creates the `products` table. Add future schema changes as new versioned migrations, such as `V2__add_product_category.sql`; do not edit a migration that has already been applied.
+
+## Monitoring
+
+Spring Boot Actuator exposes health and metrics endpoints under `/actuator`. The custom `productCatalog` health indicator checks the product repository and reports the current product count. Product create and delete operations publish custom Micrometer metrics, available through the secured `/actuator/metrics` endpoint and the Prometheus-compatible `/actuator/prometheus` endpoint. Health and info are public; operational metrics require an administrator JWT.
 
 ## OAuth2 and JWT security
 
@@ -86,4 +114,4 @@ Use the ID from the create response's `Location` header in the read, update, and
 ./gradlew test
 ```
 
-The tests use an in-memory database and require no running PostgreSQL server. They exercise the HTTP endpoints, authorization rules, JWT validation, OAuth2 metadata, and main error responses.
+The tests use an in-memory H2 database and require no running PostgreSQL server. Repository tests validate persistence, service tests cover business logic with Mockito, and Spring Boot integration tests exercise the HTTP endpoints, authorization rules, JWT validation, OAuth2 metadata, Flyway migrations, Actuator endpoints, and main error responses.
