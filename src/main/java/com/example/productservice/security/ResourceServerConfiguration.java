@@ -17,6 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration(proxyBeanMethods = false)
 public class ResourceServerConfiguration {
 
+	private static final String ACTUATOR_HEALTH_PATH = "/actuator/health";
+	private static final String ACTUATOR_INFO_PATH = "/actuator/info";
+	private static final String ACTUATOR_PATH = "/actuator/**";
 	private static final String PRODUCT_API_PATH = ProductApiPaths.PRODUCTS_PATH + "/**";
 	private static final String LOGIN_PATH = "/login";
 	private static final String USER_ROLE = "USER";
@@ -42,6 +45,8 @@ public class ResourceServerConfiguration {
 		http
 				.authorizeHttpRequests(authorize -> authorize
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+						.requestMatchers(ACTUATOR_HEALTH_PATH, ACTUATOR_INFO_PATH).permitAll()
+						.requestMatchers(ACTUATOR_PATH).hasRole(ADMIN_ROLE)
 						.requestMatchers(HttpMethod.GET, PRODUCT_API_PATH).hasAnyRole(USER_ROLE, ADMIN_ROLE)
 						.requestMatchers(PRODUCT_API_PATH).hasRole(ADMIN_ROLE)
 						.requestMatchers(LOGIN_PATH).permitAll()
